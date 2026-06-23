@@ -31,24 +31,35 @@ graph.add_edge("synthesize_gaps",END)
 
 app = graph.compile()
 
-result = app.invoke({
-    "pdf_paths": [
+def run_pipeline(pdf_paths: list) -> dict:
+    result = app.invoke({
+        "pdf_paths": pdf_paths,
+        "analyses": [],
+        "gaps": [],
+        "connections": "",
+        "synthesis": ""
+    })
+    return {
+        "analyses": result["analyses"],
+        "gaps": result["gaps"],
+        "connections": result["connections"],
+        "synthesis": result["synthesis"]
+    }
+
+
+if __name__ == "__main__":
+    result = run_pipeline([
         "C:\\Users\\Lenovo\\phase3-multi-agent\\paper1.pdf",
         "C:\\Users\\Lenovo\\phase3-multi-agent\\paper2.pdf"
-    ],
-    "analyses": [],
-    "gaps": [],
-    "connections": "",
-    "synthesis": ""
-})
+    ])
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_dir = Path("reports")
-output_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = Path("reports")
+    output_dir.mkdir(exist_ok=True)
 
-report_path = output_dir / f"research_report_{timestamp}.md"
+    report_path = output_dir / f"research_report_{timestamp}.md"
 
-report = f"""# Research Gap Analysis Report
+    report = f"""# Research Gap Analysis Report
 Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ---
@@ -57,16 +68,16 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 """
 
-for i, analysis in enumerate(result["analyses"]):
-    report += f"### Paper {i+1}\n{analysis}\n\n---\n\n"
+    for i, analysis in enumerate(result["analyses"]):
+        report += f"### Paper {i+1}\n{analysis}\n\n---\n\n"
 
-report += "## Research Gaps\n\n"
-for gap in result["gaps"]:
-    report += f"{gap}\n\n---\n\n"
+    report += "## Research Gaps\n\n"
+    for gap in result["gaps"]:
+        report += f"{gap}\n\n---\n\n"
 
-report += f"## Cross-Paper Connections\n\n{result['connections']}\n\n---\n\n"
-report += f"## Synthesized Research Gaps\n\n{result['synthesis']}\n"
+    report += f"## Cross-Paper Connections\n\n{result['connections']}\n\n---\n\n"
+    report += f"## Synthesized Research Gaps\n\n{result['synthesis']}\n"
 
-report_path.write_text(report, encoding="utf-8")
+    report_path.write_text(report, encoding="utf-8")
 
-print(f"Report saved to: {report_path}")
+    print(f"Report saved to: {report_path}")
