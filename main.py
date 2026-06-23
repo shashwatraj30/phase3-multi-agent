@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, START, END
-from agents import analyze_paper, find_gaps, connect_papers, synthesize_gaps
+from agents import analyze_paper, find_gaps, connect_papers, synthesize_gaps, score_connections
 from typing import TypedDict
 from pathlib import Path
 from datetime import datetime
@@ -13,21 +13,23 @@ class ResearchState(TypedDict):
     gaps: list
     connections: str
     synthesis: str
+    edge_scores: list
 
 graph = StateGraph(ResearchState)
+
 
 graph.add_node("analyze_paper", analyze_paper)
 graph.add_node("find_gaps", find_gaps)
 graph.add_node("connect_papers", connect_papers)
 graph.add_node("synthesize_gaps", synthesize_gaps)
-
+graph.add_node("score_connections", score_connections)
 
 graph.add_edge(START, "analyze_paper")
 graph.add_edge("analyze_paper", "find_gaps")
 graph.add_edge("find_gaps", "connect_papers")
-graph.add_edge("connect_papers","synthesize_gaps")
-graph.add_edge("synthesize_gaps",END)
-
+graph.add_edge("connect_papers", "synthesize_gaps")
+graph.add_edge("synthesize_gaps", "score_connections")
+graph.add_edge("score_connections", END)
 
 app = graph.compile()
 
@@ -37,13 +39,15 @@ def run_pipeline(pdf_paths: list) -> dict:
         "analyses": [],
         "gaps": [],
         "connections": "",
-        "synthesis": ""
+        "synthesis": "",
+        "edge_scores": []
     })
     return {
         "analyses": result["analyses"],
         "gaps": result["gaps"],
         "connections": result["connections"],
-        "synthesis": result["synthesis"]
+        "synthesis": result["synthesis"],
+        "edge_scores": result["edge_scores"]
     }
 
 
@@ -52,6 +56,7 @@ if __name__ == "__main__":
         "C:\\Users\\Lenovo\\phase3-multi-agent\\paper1.pdf",
         "C:\\Users\\Lenovo\\phase3-multi-agent\\paper2.pdf"
     ])
+    print("Edge scores:", result["edge_scores"])
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = Path("reports")

@@ -97,3 +97,36 @@ def synthesize_gaps(state: dict) -> dict:
         return {"synthesis": response.content}
     except Exception as e:
         return {"synthesis": f"Synthesis failed: {str(e)}"}
+
+def score_connections(state: dict) -> dict:
+    try:
+        num_papers = len(state["analyses"])
+        if num_papers < 2:
+            return {"edge_scores": []}
+
+        pairs = []
+        for i in range(num_papers):
+            for j in range(i + 1, num_papers):
+                pairs.append((i, j))
+
+        pair_descriptions = "\n".join([f"- Paper {a+1} vs Paper {b+1}" for a, b in pairs])
+
+        response = llm.invoke([HumanMessage(content=(
+            "You are a research analyst scoring conceptual similarity between papers.\n\n"
+            f"Based on this cross-paper connection analysis:\n{state['connections']}\n\n"
+            f"Score the conceptual connection strength for each pair below on a scale of 0.0 to 1.0:\n"
+            f"{pair_descriptions}\n\n"
+            "Return ONLY a valid JSON array, no explanation, no markdown, no backticks. Example:\n"
+            '[{"paper_a": 0, "paper_b": 1, "strength": 0.85, "reason": "Both use transformer attention"}]\n\n'
+            "Use 0-indexed paper numbers. Be honest — not all papers are strongly connected."
+        ))])
+
+        import json
+        raw = response.content.strip()
+        raw = raw.replace("```json", "").replace("```", "").strip()
+        edge_scores = json.loads(raw)
+        time.sleep(1)
+        return {"edge_scores": edge_scores}
+
+    except Exception as e:
+        return {"edge_scores": []}
