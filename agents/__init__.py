@@ -99,6 +99,7 @@ def synthesize_gaps(state: dict) -> dict:
         return {"synthesis": f"Synthesis failed: {str(e)}"}
 
 def score_connections(state: dict) -> dict:
+    time.sleep(3)  # wait to avoid rate limit
     try:
         num_papers = len(state["analyses"])
         if num_papers < 2:
@@ -129,4 +130,5 @@ def score_connections(state: dict) -> dict:
         return {"edge_scores": edge_scores}
 
     except Exception as e:
+        print(f"score_connections failed: {str(e)}"
         return {"edge_scores": []}
