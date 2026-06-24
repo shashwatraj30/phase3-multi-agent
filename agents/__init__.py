@@ -130,5 +130,5 @@ def score_connections(state: dict) -> dict:
         return {"edge_scores": edge_scores}
 
     except Exception as e:
-        print(f"score_connections failed: {str(e)}"
+        print(f"score_connections failed: {str(e)}")
         return {"edge_scores": []}
