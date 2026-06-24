@@ -102,6 +102,7 @@ def score_connections(state: dict) -> dict:
     time.sleep(3)  # wait to avoid rate limit
     try:
         num_papers = len(state["analyses"])
+        print(f"score_connections: num_papers={num_papers}")
         if num_papers < 2:
             return {"edge_scores": []}
 
@@ -126,8 +127,10 @@ def score_connections(state: dict) -> dict:
         raw = response.content.strip()
         raw = raw.replace("```json", "").replace("```", "").strip()
         edge_scores = json.loads(raw)
+        print(f"score_connections result: {edge_scores}")
         time.sleep(1)
         return {"edge_scores": edge_scores}
+
 
     except Exception as e:
         print(f"score_connections failed: {str(e)}")
