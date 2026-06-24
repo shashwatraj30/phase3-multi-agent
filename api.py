@@ -5,7 +5,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import tempfile
-
+from pydantic import BaseModel
 from main import run_pipeline  # we'll create this function next
 
 app = FastAPI()
@@ -20,6 +20,29 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+class ChatRequest(BaseModel):
+    question: str
+    context: str
+
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    try:
+        from langchain_groq import ChatGroq
+        from langchain_core.messages import HumanMessage
+        from dotenv import load_dotenv
+        load_dotenv()
+
+        llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+        response = llm.invoke([HumanMessage(content=(
+            "You are a research assistant helping a user understand academic papers.\n\n"
+            f"Here is the analysis context from the uploaded papers:\n{req.context}\n\n"
+            f"User question: {req.question}\n\n"
+            "Answer concisely and accurately based only on the provided context."
+        ))])
+        return {"status": "success", "answer": response.content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze")
 async def analyze(files: List[UploadFile] = File(...)):
