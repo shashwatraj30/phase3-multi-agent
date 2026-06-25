@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import tempfile
 from pydantic import BaseModel
-from main import run_pipeline  # we'll create this function next
+from main import run_pipeline
 
 app = FastAPI()
 
@@ -33,10 +33,13 @@ async def chat(req: ChatRequest):
         from dotenv import load_dotenv
         load_dotenv()
 
+        # Truncate context to last 3000 chars — prevents token blowup on long sessions
+        context = req.context[-3000:] if len(req.context) > 3000 else req.context
+
         llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
         response = llm.invoke([HumanMessage(content=(
             "You are a research assistant helping a user understand academic papers.\n\n"
-            f"Here is the analysis context from the uploaded papers:\n{req.context}\n\n"
+            f"Here is the analysis context from the uploaded papers:\n{context}\n\n"
             f"User question: {req.question}\n\n"
             "Answer concisely and accurately based only on the provided context."
         ))])
