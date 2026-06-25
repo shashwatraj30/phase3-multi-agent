@@ -46,9 +46,17 @@ async def chat(req: ChatRequest):
 
         async def token_stream():
             async for chunk in llm.astream(prompt):
-                yield chunk.content
+                if chunk.content:
+                    yield chunk.content.encode("utf-8")
 
-        return StreamingResponse(token_stream(), media_type="text/plain")
+        return StreamingResponse(
+            token_stream(),
+            media_type="text/plain",
+            headers={
+                "X-Accel-Buffering": "no",
+                "Cache-Control": "no-cache",
+            }
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
